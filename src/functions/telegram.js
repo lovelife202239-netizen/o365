@@ -7,6 +7,16 @@
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+function toPlainText(message) {
+  // The callers build messages with HTML-ish tags (<br>, <b>). Telegram's
+  // HTML parse mode rejects <br> with 400 (unsupported tag), which silently
+  // killed every dispatch. Convert to plain text: no parse_mode, nothing to break.
+  return String(message)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/?b>/gi, "")
+    .replace(/<\/?pre>/gi, "");
+}
+
 async function sendTelegram(message, context) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     context?.log?.("Telegram not configured (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID missing)");
@@ -20,8 +30,7 @@ async function sendTelegram(message, context) {
       },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: "HTML",
+        text: toPlainText(message),
         disable_web_page_preview: true,
       }),
     });

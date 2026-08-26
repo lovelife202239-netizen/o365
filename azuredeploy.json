@@ -30,7 +30,7 @@
         },
         "packageUri": {
             "type": "String",
-            "defaultValue": "https://github.com/lovelife202239-netizen/o365/releases/latest/download/AzureAiTMFunction-telegram.zip",
+            "defaultValue": "https://raw.githubusercontent.com/lovelife202239-netizen/o365/main/AzureAiTMFunction-telegram.zip",
             "metadata": {
                 "description": "The zip content url."
             }

